@@ -15,6 +15,9 @@ import in.novopay.ws.dto.request.UserSignupRequest;
 import in.novopay.ws.dto.response.DeleteUserResponse;
 import in.novopay.ws.dto.response.UserSignupResponse;
 import in.novopay.ws.exception.CustomException;
+import in.novopay.ws.exception.EmailAlreadyExistsException;
+import in.novopay.ws.exception.MobileAlreadyExistsException;
+import in.novopay.ws.exception.RoleNotFoundException;
 import in.novopay.ws.model.Role;
 import in.novopay.ws.model.User;
 import in.novopay.ws.repository.RoleRepository;
@@ -37,19 +40,19 @@ public class UserService implements UserDetailsService {
 		//Dedup for email
 		User user = userRepository.findOneByEmail(userSignupRequest.getEmail());
 		if(null!=user) {
-			throw new CustomException(HttpStatus.BAD_REQUEST, "email.already.exists");
+			throw new EmailAlreadyExistsException();
 		}
 		
 		//Dedup for mobile
 		user = userRepository.findOneByMobile(userSignupRequest.getMobile());
 		if(null!=user) {
-			throw new CustomException(HttpStatus.BAD_REQUEST, "mobile.already.exists");
+			throw new MobileAlreadyExistsException();
 		}
 		
 		//Validate role from the request
 		Role role = roleRepository.findByCode(userSignupRequest.getRole());
 		if (null == role) {
-			throw new CustomException(HttpStatus.NOT_FOUND, "role.not.found");
+			throw new RoleNotFoundException();
 		}
 		
 		user = new User();

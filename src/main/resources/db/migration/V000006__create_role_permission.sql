@@ -1,0 +1,6 @@
+CREATE TABLE role_permission (
+	id SERIAL PRIMARY KEY,
+	role_id INTEGER NOT NULL REFERENCES roles(id),
+	permission_id INTEGER NOT NULL REFERENCES permissions(id),
+	created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)

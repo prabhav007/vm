@@ -1,9 +1,15 @@
 package in.novopay.ws.model;
 
+import java.util.List;
+
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 
 @Entity
@@ -14,6 +20,14 @@ public class Role {
 	private Integer id;
 	private String code;
 	private String name;
+	
+	@ManyToMany(fetch=FetchType.EAGER)
+	@JoinTable(
+		name = "role_permission",
+		joinColumns = @JoinColumn(name="role_id"),
+		inverseJoinColumns = @JoinColumn(name="permission_id")
+	)
+	private List<Permission> permissions;
 
 	public Integer getId() {
 		return id;
@@ -37,6 +51,14 @@ public class Role {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public List<Permission> getPermissions() {
+		return permissions;
+	}
+
+	public void setPermissions(List<Permission> permissions) {
+		this.permissions = permissions;
 	}
 
 }

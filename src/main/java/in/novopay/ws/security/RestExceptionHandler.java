@@ -19,9 +19,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import in.novopay.ws.dto.response.FailureReponse;
+import in.novopay.ws.dto.response.FailureResponse;
 import in.novopay.ws.dto.response.FieldValidationError;
 import in.novopay.ws.exception.CustomException;
+import in.novopay.ws.exception.CustomResponseStatusException;
 
 @ControllerAdvice
 public class RestExceptionHandler {
@@ -33,7 +34,7 @@ public class RestExceptionHandler {
 	private MessageSource messageSource;
 	
 	@ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<FailureReponse> handleArgumentNotValidException(MethodArgumentNotValidException ex, Locale locale) {
+    public ResponseEntity<FailureResponse> handleArgumentNotValidException(MethodArgumentNotValidException ex, Locale locale) {
         BindingResult result = ex.getBindingResult();
        	List<FieldValidationError> errorMessageList = new ArrayList<>();
        	FieldValidationError fieldValidationError;
@@ -46,11 +47,11 @@ public class RestExceptionHandler {
         	
         	errorMessageList.add(fieldValidationError);
         }
-        return new ResponseEntity<>(new FailureReponse(errorMessageList), HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(new FailureResponse("IA002",HttpStatus.BAD_REQUEST.value(), "", ex.getMessage(),errorMessageList), HttpStatus.BAD_REQUEST);
     }
 	
     @ExceptionHandler(CustomException.class)
-    public ResponseEntity<FailureReponse> handleCustomExceptions(CustomException ex, Locale locale) {
+    public ResponseEntity<FailureResponse> handleCustomExceptions(CustomException ex, Locale locale) {
     	LOG.error(ex.getMessage(), ex);
         String errorMessage;
         try {
@@ -58,20 +59,32 @@ public class RestExceptionHandler {
 		} catch (NoSuchMessageException e) {
 			errorMessage = messageSource.getMessage(UNEXPECTED_ERROR, null, locale);
 		}
-        return new ResponseEntity<>(new FailureReponse(errorMessage), ex.getStatus());
+        return new ResponseEntity<>(new FailureResponse(ex.getMessageCode(), ex.getStatus().value(), errorMessage, errorMessage), ex.getStatus());
+    }
+    
+    @ExceptionHandler(CustomResponseStatusException.class)
+    public ResponseEntity<FailureResponse> handleCustomExceptions(CustomResponseStatusException ex, Locale locale) {
+    	LOG.error(ex.getMessage(), ex);
+        String errorMessage;
+        try {
+			errorMessage = messageSource.getMessage(ex.getCode(), null, locale);
+		} catch (NoSuchMessageException e) {
+			errorMessage = messageSource.getMessage(UNEXPECTED_ERROR, null, locale);
+		}
+        return new ResponseEntity<>(new FailureResponse(ex.getCode(), ex.getStatus().value(), errorMessage, errorMessage), ex.getStatus());
     }
 	
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<FailureReponse> handleHttpMethodNotReadableException(Exception ex, Locale locale) {
+    public ResponseEntity<FailureResponse> handleHttpMethodNotReadableException(Exception ex, Locale locale) {
     	LOG.error(ex.getMessage(), ex);
         String errorMessage = messageSource.getMessage(BAD_REQUEST, null, locale);
-        return new ResponseEntity<>(new FailureReponse(errorMessage), HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(new FailureResponse("IA001", HttpStatus.BAD_REQUEST.value(), errorMessage, ex.getMessage()), HttpStatus.BAD_REQUEST);
     }
 	
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<FailureReponse> handleExceptions(Exception ex, Locale locale) {
+    public ResponseEntity<FailureResponse> handleExceptions(Exception ex, Locale locale) {
     	LOG.error(ex.getMessage(), ex);
         String errorMessage = messageSource.getMessage(UNEXPECTED_ERROR, null, locale);
-        return new ResponseEntity<>(new FailureReponse(errorMessage), HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(new FailureResponse("UN001", HttpStatus.INTERNAL_SERVER_ERROR.value(), errorMessage, ex.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

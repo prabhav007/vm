@@ -13,7 +13,7 @@ public class AuthenticateResponse extends GenericResponse implements Serializabl
 	private final String jwttoken;
 
 	public AuthenticateResponse(String jwttoken) {
-		super("Login successful");
+		super("","","Login successful", "");
 		this.setResult(Result.success);
 		this.jwttoken = jwttoken;
 	}
